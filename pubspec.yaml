@@ -1,0 +1,31 @@
+name: finance_app_mobile
+description: "FinanceApp Mobile — app de gerenciamento financeiro (Tech Challenge Fase 03, POSTECH Front-End Engineering)."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  cloud_firestore: ^6.7.1
+  firebase_auth: ^6.5.6
+  firebase_core: ^4.12.1
+  firebase_storage: ^13.4.5
+  fl_chart: ^1.2.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  go_router: ^17.3.0
+  image_picker: ^1.2.3
+  intl: 0.20.2
+  provider: ^6.1.5+1
+  shadcn_ui: ^0.55.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
