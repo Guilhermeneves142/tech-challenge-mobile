@@ -17,15 +17,23 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   go_router: ^17.3.0
+  http: ^1.6.0
   image_picker: ^1.2.3
   intl: 0.20.2
   provider: ^6.1.5+1
   shadcn_ui: ^0.55.0
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+# path_provider_android >= 2.3.0 puxa o pacote `jni`, cujo build.gradle não
+# compila no Gradle 9.1.0 (erro "Could not find method kotlin()"). Fixamos na
+# última 2.2.x (pré-jni) até o jni ser compatível.
+dependency_overrides:
+  path_provider_android: 2.2.23
 
 flutter:
   uses-material-design: true

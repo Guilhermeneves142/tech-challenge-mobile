@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Verde da marca (brand-tertiary) usado na launch screen nativa -->
+    <color name="brand_green">#FF3A5A40</color>
+</resources>
