@@ -5,6 +5,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/home_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/transactions/presentation/transactions_screen.dart';
 
 /// Configuração de navegação (go_router).
 ///
@@ -50,6 +51,11 @@ class AppRouter {
           path: '/',
           name: 'home',
           builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/transacoes',
+          name: 'transactions',
+          builder: (context, state) => const TransactionsScreen(),
         ),
         GoRoute(
           path: '/login',

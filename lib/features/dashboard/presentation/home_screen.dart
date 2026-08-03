@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -107,6 +108,23 @@ class _AppDrawer extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+
+            ListTile(
+              leading: Icon(
+                Icons.receipt_long_outlined,
+                color: theme.colorScheme.foreground,
+              ),
+              title: Text(
+                'Transações',
+                style: theme.textTheme.small.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/transacoes');
+              },
             ),
 
             const Spacer(),

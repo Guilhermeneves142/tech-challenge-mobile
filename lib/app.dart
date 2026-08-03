@@ -7,6 +7,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/transactions/providers/transactions_provider.dart';
 
 /// Widget raiz da aplicação.
 ///
@@ -37,8 +38,11 @@ class _FinanceAppState extends State<FinanceApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: widget.authProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: widget.authProvider),
+        ChangeNotifierProvider(create: (_) => TransactionsProvider()),
+      ],
       child: ShadApp.router(
         title: 'FinanceApp',
         debugShowCheckedModeBanner: false,
