@@ -5,10 +5,7 @@ import '../../../core/config/app_config.dart';
 import '../../auth/data/auth_api.dart';
 import '../models/transaction.dart';
 
-/// Cliente dos endpoints de transações.
-///
-/// Responsável apenas por fazer as chamadas HTTP e transformar
-/// as respostas em objetos Dart.
+/// Responsável por fazer as chamadas HTTP e transformar as respostas em objetos Dart.
 class TransactionApi {
   final http.Client _client;
 
