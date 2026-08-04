@@ -7,13 +7,17 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/transactions/providers/transaction_provider.dart';
 
 /// Widget raiz da aplicação.
 ///
 /// É StatefulWidget para criar o [GoRouter] UMA vez (em initState) — recriar o
 /// router a cada rebuild perderia o histórico de navegação.
 class FinanceApp extends StatefulWidget {
-  const FinanceApp({super.key, required this.authProvider});
+  const FinanceApp({
+    super.key,
+    required this.authProvider,
+  });
 
   final AuthProvider authProvider;
 
@@ -27,9 +31,9 @@ class _FinanceAppState extends State<FinanceApp> {
   @override
   void initState() {
     super.initState();
+
     // Só restaura a sessão DEPOIS do primeiro frame, para o contador mínimo da
-    // Splash começar quando ela já está visível (senão o cold start "come" o
-    // tempo e a splash pisca).
+    // Splash começar quando ela já está visível.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.authProvider.loadSession();
     });
@@ -37,8 +41,16 @@ class _FinanceAppState extends State<FinanceApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: widget.authProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(
+          value: widget.authProvider,
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => TransactionProvider(),
+        ),
+      ],
       child: ShadApp.router(
         title: 'FinanceApp',
         debugShowCheckedModeBanner: false,
@@ -51,7 +63,9 @@ class _FinanceAppState extends State<FinanceApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [Locale('pt', 'BR')],
+        supportedLocales: const [
+          Locale('pt', 'BR'),
+        ],
       ),
     );
   }
