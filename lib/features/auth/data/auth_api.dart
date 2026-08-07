@@ -59,7 +59,7 @@ class AuthApi {
         : <String, dynamic>{};
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      return AuthResponse.fromJson(data);
+      return AuthResponse.fromJson(data); //Precisa ajustar isso
     }
 
     // Backend devolve `{ message }` nos erros (400/401/409).
