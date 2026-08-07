@@ -1,20 +1,18 @@
-/// Modelo do usuário autenticado — espelha a `interface AuthUser` do web
-/// (mfe-auth/src/lib/auth-api.ts).
+/// Modelo do usuário autenticado.
 ///
-/// Aula (JS -> Dart): no JS o `res.json()` já vira um objeto tipado pela
-/// interface. No Dart o JSON decodado é um `Map<String, dynamic>` (objeto
-/// genérico), então criamos uma classe com um construtor `fromJson` que faz o
-/// "parse", e um `toJson` pra gravar de volta (ex.: no armazenamento local).
+/// Adaptado para Firebase Auth.
+/// O Firebase utiliza `uid` como identificador único (String),
+/// diferente do backend antigo que usava `id` numérico.
 class AuthUser {
-  final int id;
+  final String uid;
   final String name;
   final String email;
   final String initials;
   final String plan;
-  final String? avatar; // pode ser null -> tipo anulável com `?`
+  final String? avatar;
 
   const AuthUser({
-    required this.id,
+    required this.uid,
     required this.name,
     required this.email,
     required this.initials,
@@ -23,16 +21,16 @@ class AuthUser {
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
-        id: json['id'] as int,
+        uid: json['uid'] as String,
         name: json['name'] as String,
         email: json['email'] as String,
         initials: (json['initials'] as String?) ?? '',
-        plan: (json['plan'] as String?) ?? '',
+        plan: (json['plan'] as String?) ?? 'free',
         avatar: json['avatar'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
+        'uid': uid,
         'name': name,
         'email': email,
         'initials': initials,
@@ -41,15 +39,18 @@ class AuthUser {
       };
 }
 
-/// Resposta dos endpoints /auth/login e /auth/register: `{ user, token }`.
+
+/// Resposta padronizada da autenticação.
+///
+/// Mantemos esse formato para não precisar mudar
+/// todas as telas que já esperam:
+/// user + token.
 class AuthResponse {
   final AuthUser user;
   final String token;
 
-  const AuthResponse({required this.user, required this.token});
-
-  factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
-        user: AuthUser.fromJson(json['user'] as Map<String, dynamic>),
-        token: json['token'] as String,
-      );
+  const AuthResponse({
+    required this.user,
+    required this.token,
+  });
 }
