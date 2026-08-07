@@ -5,6 +5,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/home_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../widgets/under_construction_screen.dart';
 
 /// Configuração de navegação (go_router).
 ///
@@ -60,6 +61,14 @@ class AppRouter {
           path: '/cadastro',
           name: 'cadastro',
           builder: (context, state) => const CadastroScreen(),
+        ),
+        // Transações fica a cargo de outra pessoa da equipe — por ora, um
+        // placeholder "Em breve" só pra manter o item do menu navegável.
+        GoRoute(
+          path: '/transacoes',
+          name: 'transacoes',
+          builder: (context, state) =>
+              const UnderConstructionScreen(title: 'Transações'),
         ),
       ],
     );

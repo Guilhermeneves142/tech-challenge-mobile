@@ -1,55 +1,48 @@
-/// Modelo do usuário autenticado — espelha a `interface AuthUser` do web
-/// (mfe-auth/src/lib/auth-api.ts).
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+
+/// Modelo do usuário autenticado.
 ///
-/// Aula (JS -> Dart): no JS o `res.json()` já vira um objeto tipado pela
-/// interface. No Dart o JSON decodado é um `Map<String, dynamic>` (objeto
-/// genérico), então criamos uma classe com um construtor `fromJson` que faz o
-/// "parse", e um `toJson` pra gravar de volta (ex.: no armazenamento local).
+/// Aula: no Firebase o identificador do usuário é o `uid` (uma string),
+/// diferente do `id` numérico que um backend próprio costuma usar. E-mail e
+/// senha ficam só no Firebase Auth; o resto do "perfil" (nome, iniciais,
+/// plano) mora num documento à parte no Firestore, na coleção `users`.
 class AuthUser {
-  final int id;
+  final String uid;
   final String name;
   final String email;
   final String initials;
   final String plan;
-  final String? avatar; // pode ser null -> tipo anulável com `?`
 
   const AuthUser({
-    required this.id,
+    required this.uid,
     required this.name,
     required this.email,
     required this.initials,
     required this.plan,
-    this.avatar,
   });
 
-  factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        email: json['email'] as String,
-        initials: (json['initials'] as String?) ?? '',
-        plan: (json['plan'] as String?) ?? '',
-        avatar: json['avatar'] as String?,
-      );
+  /// Combina o usuário do Firebase Auth (`fbUser`) com o perfil salvo no
+  /// Firestore (`profile`, o `Map` do documento em `users/<uid>`).
+  factory AuthUser.fromFirebase(
+    fb_auth.User fbUser,
+    Map<String, dynamic>? profile,
+  ) {
+    final name = (profile?['name'] as String?) ??
+        fbUser.displayName ??
+        fbUser.email?.split('@').first ??
+        'Usuário';
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'initials': initials,
-        'plan': plan,
-        'avatar': avatar,
-      };
-}
+    return AuthUser(
+      uid: fbUser.uid,
+      name: name,
+      email: (profile?['email'] as String?) ?? fbUser.email ?? '',
+      initials: (profile?['initials'] as String?) ?? _initialsOf(name),
+      plan: (profile?['plan'] as String?) ?? 'Plano Grátis',
+    );
+  }
 
-/// Resposta dos endpoints /auth/login e /auth/register: `{ user, token }`.
-class AuthResponse {
-  final AuthUser user;
-  final String token;
-
-  const AuthResponse({required this.user, required this.token});
-
-  factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
-        user: AuthUser.fromJson(json['user'] as Map<String, dynamic>),
-        token: json['token'] as String,
-      );
+  static String _initialsOf(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+    return parts.map((p) => p[0]).take(2).join().toUpperCase();
+  }
 }

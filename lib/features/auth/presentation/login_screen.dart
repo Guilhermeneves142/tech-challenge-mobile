@@ -8,7 +8,8 @@ import '../providers/auth_provider.dart';
 /// Tela de login — espelha o `LoginForm.tsx` do mfe-auth.
 ///
 /// É um StatefulWidget porque tem estado local (mostrar/ocultar senha).
-/// O estado de auth (loading/erro/token) fica no [AuthProvider].
+/// O estado de auth (loading/erro/usuário) fica no [AuthProvider], que por
+/// baixo já usa Firebase Auth.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
