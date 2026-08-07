@@ -33,13 +33,18 @@ class _CadastroScreenState extends State<CadastroScreen> {
     if (!_formKey.currentState!.saveAndValidate()) return;
 
     final values = _formKey.currentState!.value;
+
+    debugPrint(values.toString());
+
     final ok = await auth.register(
       name: (values['name'] as String).trim(),
       email: (values['email'] as String).trim(),
       password: values['password'] as String,
     );
 
-    if (ok && mounted) router.go('/');
+    if (ok && mounted) {
+      router.go('/');
+    }
   }
 
   @override
