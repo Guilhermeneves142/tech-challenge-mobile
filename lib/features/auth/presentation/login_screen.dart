@@ -30,12 +30,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.saveAndValidate()) return;
 
     final values = _formKey.currentState!.value;
-    final ok = await auth.login(
+    /*final ok = await auth.login(
       email: (values['email'] as String).trim(),
       password: values['password'] as String,
-    );
+    )
 
-    if (ok && mounted) router.go('/'); // logado -> área interna
+    if (ok && mounted) router.go('/'); */// logado -> área interna
   }
 
   @override
