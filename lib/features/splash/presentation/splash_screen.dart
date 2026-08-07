@@ -10,7 +10,7 @@ import '../../../core/theme/app_colors.dart';
 /// único `AnimationController`, aqui usamos VÁRIOS, cada um responsável por
 /// uma camada de movimento independente:
 /// - `_entrance` roda UMA VEZ (logo e textos aparecendo em cascata).
-/// - `_ambient` fica em loop contínuo (formas flutuando ao fundo).
+/// - `_ambient` fica em loop contínuo (linhas de tendência rolando ao fundo).
 /// - `_pulse` fica em loop de ida-e-volta (o halo "respirando" atrás do logo).
 /// - `_dots` fica em loop contínuo (os 3 pontinhos de carregamento).
 /// Separar em controllers diferentes deixa cada animação simples de entender
@@ -68,12 +68,12 @@ class _SplashScreenState extends State<SplashScreen>
         ),
         child: Stack(
           children: [
-            // Camada 1: formas flutuantes de fundo (movimento contínuo suave).
+            // Camada 1: linhas de tendência ao fundo (rolagem contínua suave).
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _ambient,
                 builder: (context, _) => CustomPaint(
-                  painter: _FloatingShapesPainter(_ambient.value),
+                  painter: _TrendLinesPainter(_ambient.value),
                 ),
               ),
             ),
@@ -264,34 +264,96 @@ class _LoadingDots extends StatelessWidget {
   }
 }
 
-/// Desenha 3 círculos translúcidos flutuando lentamente ao fundo — puro
-/// `CustomPainter`, sem imagens/dependências externas.
-class _FloatingShapesPainter extends CustomPainter {
-  _FloatingShapesPainter(this.t); // t = progresso 0..1 do loop ambiente
+/// Desenha linhas de tendência (estilo gráfico de mercado) rolando devagar ao
+/// fundo — reforça a identidade de app financeiro em vez do clichê genérico
+/// de "bolhas" borradas. Puro `CustomPainter`, sem imagens/dependências.
+class _TrendLinesPainter extends CustomPainter {
+  _TrendLinesPainter(this.t); // t = progresso 0..1 do loop ambiente
 
   final double t;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withValues(alpha: 0.06);
+  // Pontos normalizados (0..1) de uma linha em zigue-zague ascendente.
+  static const _points = [
+    Offset(0.00, 0.75),
+    Offset(0.10, 0.60),
+    Offset(0.18, 0.68),
+    Offset(0.28, 0.48),
+    Offset(0.37, 0.58),
+    Offset(0.47, 0.38),
+    Offset(0.56, 0.46),
+    Offset(0.65, 0.28),
+    Offset(0.75, 0.36),
+    Offset(0.85, 0.20),
+    Offset(0.93, 0.27),
+    Offset(1.00, 0.14),
+  ];
 
-    void circle(double cxFrac, double cyFrac, double radius, double phase) {
-      final angle = (t * 2 * math.pi) + (phase * 2 * math.pi);
-      final dx = math.sin(angle) * 18;
-      final dy = math.cos(angle) * 18;
-      canvas.drawCircle(
-        Offset(size.width * cxFrac + dx, size.height * cyFrac + dy),
-        radius,
+  Path _buildPath(double width, double dx, double baseline, double amplitude) {
+    final path = Path();
+    for (var i = 0; i < _points.length; i++) {
+      final p = _points[i];
+      final x = p.dx * width + dx;
+      final y = baseline - amplitude / 2 + p.dy * amplitude;
+      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+    }
+    return path;
+  }
+
+  void _drawLine(
+    Canvas canvas,
+    Size size, {
+    required double speed,
+    required double baselineFrac,
+    required double amplitude,
+    required double opacity,
+    required double strokeWidth,
+  }) {
+    // Rolagem contínua para a esquerda; duas cópias lado a lado garantem que
+    // o padrão pareça "sem costura" ao voltar para o início do loop.
+    final scroll = (t * speed) % 1.0;
+    final dx = -scroll * size.width;
+    final baseline = size.height * baselineFrac;
+
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+
+    canvas
+      ..drawPath(_buildPath(size.width, dx, baseline, amplitude), paint)
+      ..drawPath(
+        _buildPath(size.width, dx + size.width, baseline, amplitude),
         paint,
       );
-    }
-
-    circle(0.15, 0.20, 90, 0.0);
-    circle(0.85, 0.30, 130, 0.33);
-    circle(0.75, 0.80, 70, 0.66);
   }
 
   @override
-  bool shouldRepaint(covariant _FloatingShapesPainter oldDelegate) =>
+  void paint(Canvas canvas, Size size) {
+    // Duas linhas com velocidades/alturas diferentes -> leve sensação de
+    // profundidade (parallax), sem chamar atenção demais.
+    _drawLine(
+      canvas,
+      size,
+      speed: 0.55,
+      baselineFrac: 0.20,
+      amplitude: size.height * 0.10,
+      opacity: 0.10,
+      strokeWidth: 2.2,
+    );
+    _drawLine(
+      canvas,
+      size,
+      speed: 0.35,
+      baselineFrac: 0.66,
+      amplitude: size.height * 0.08,
+      opacity: 0.07,
+      strokeWidth: 1.6,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendLinesPainter oldDelegate) =>
       oldDelegate.t != t;
 }
