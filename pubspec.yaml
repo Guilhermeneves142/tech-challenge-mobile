@@ -17,17 +17,18 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   go_router: ^17.3.0
-  http: ^1.6.0
   image_picker: ^1.2.3
-  intl: 0.20.2
+  intl: ^0.20.2
   provider: ^6.1.5+1
   shadcn_ui: ^0.55.0
-  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  firebase_auth_mocks: ^0.15.2
+  fake_cloud_firestore: ^4.2.0
+  flutter_launcher_icons: ^0.14.4
 
 # path_provider_android >= 2.3.0 puxa o pacote `jni`, cujo build.gradle não
 # compila no Gradle 9.1.0 (erro "Could not find method kotlin()"). Fixamos na
@@ -37,3 +38,13 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+
+# Ícone do app gerado por tool/gen_icon_test.dart (marca "carteira" nas cores
+# da marca). Reaplicar com: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#3B783A"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

@@ -2,4 +2,5 @@
 <resources>
     <!-- Verde da marca (brand-tertiary) usado na launch screen nativa -->
     <color name="brand_green">#FF3A5A40</color>
+	<color name="ic_launcher_background">#3B783A</color>
 </resources>

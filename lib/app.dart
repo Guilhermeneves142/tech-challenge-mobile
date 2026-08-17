@@ -26,18 +26,9 @@ class FinanceApp extends StatefulWidget {
 }
 
 class _FinanceAppState extends State<FinanceApp> {
+  // O AuthProvider já escuta authStateChanges() do Firebase sozinho (desde o
+  // construtor, lá no main.dart) — aqui só criamos o router uma única vez.
   late final GoRouter _router = AppRouter.create(widget.authProvider);
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Só restaura a sessão DEPOIS do primeiro frame, para o contador mínimo da
-    // Splash começar quando ela já está visível.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.authProvider.loadSession();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
