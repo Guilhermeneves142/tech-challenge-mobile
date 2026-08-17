@@ -1,0 +1,28 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "finance-app-plus",
+          "appId": "1:297432658439:android:155c489a3d6698a2b930a2",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "finance-app-plus",
+          "configurations": {
+            "android": "1:297432658439:android:155c489a3d6698a2b930a2"
+          }
+        }
+      }
+    }
+  }
+}
