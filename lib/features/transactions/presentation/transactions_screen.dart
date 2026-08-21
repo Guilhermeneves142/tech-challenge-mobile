@@ -105,18 +105,40 @@ class _TransactionsViewState extends State<_TransactionsView> {
     final confirmed = await showShadDialog<bool>(
       context: context,
       builder: (context) => ShadDialog.alert(
-        title: const Text('Excluir transação?'),
-        description: Text(
+        title: const Text('Excluir transação'),
+        radius: BorderRadius.circular(20),
+        removeBorderRadiusWhenTiny: false,
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+        useSafeArea: false,
+        description: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Text(
+          'Tem certeza que deseja excluir essa transação?\n'
           '"${transaction.description}" será removida permanentemente.',
-        ),
-        actions: [
-          ShadButton.outline(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+          textAlign: TextAlign.left,
+          style: ShadTheme.of(context).textTheme.muted.copyWith(
+            fontSize: 14,
+            height: 1.5,
           ),
-          ShadButton.destructive(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir'),
+        ),
+      ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: ShadButton.outline(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ShadButton.destructive(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Excluir'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
