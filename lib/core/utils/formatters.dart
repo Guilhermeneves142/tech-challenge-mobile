@@ -14,6 +14,22 @@ final NumberFormat _currency = NumberFormat.currency(
 final DateFormat _dayMonth = DateFormat('dd MMM', 'pt_BR');
 final DateFormat _time = DateFormat('HH:mm', 'pt_BR');
 final DateFormat _shortDate = DateFormat('dd/MM/yyyy', 'pt_BR');
+final DateFormat _monthAbbrev = DateFormat('MMM', 'pt_BR');
+final DateFormat _monthYear = DateFormat('MMM/yy', 'pt_BR');
+
+/// Mês abreviado e capitalizado: `Jan`, `Fev`… (rótulo do gráfico de evolução).
+String formatMonthAbbrev(DateTime date) {
+  final month = _monthAbbrev.format(date).replaceAll('.', '');
+  if (month.isEmpty) return month;
+  return '${month[0].toUpperCase()}${month.substring(1)}';
+}
+
+/// Mês/ano curto e capitalizado: `Mar/25`, `Ago/26`… (eixo X do gráfico).
+String formatMonthYear(DateTime date) {
+  final value = _monthYear.format(date).replaceAll('.', '');
+  if (value.isEmpty) return value;
+  return '${value[0].toUpperCase()}${value.substring(1)}';
+}
 
 /// `1234.5` -> `R$ 1.234,50`
 String formatCurrency(double value) => _currency.format(value);
