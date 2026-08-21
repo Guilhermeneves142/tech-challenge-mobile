@@ -5,16 +5,29 @@ import '../../../../core/utils/formatters.dart';
 import '../../models/transaction.dart';
 import 'transaction_tile.dart';
 
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+
+class TransactionFormResult {
+  const TransactionFormResult({
+    required this.transaction,
+    this.receiptFile,
+  });
+
+  final TransactionModel transaction;
+  final File? receiptFile;
+}
+
 /// Abre o formulário de nova transação (ou edição, se [transaction] vier).
 ///
 /// Devolve a transação preenchida — quem salva é a tela, que tem acesso ao
 /// provider. Assim o formulário não depende do estado global e fica testável.
-Future<TransactionModel?> showTransactionFormSheet(
+Future<TransactionFormResult?> showTransactionFormSheet(
   BuildContext context, {
   required String userId,
   TransactionModel? transaction,
 }) {
-  return showShadSheet<TransactionModel>(
+  return showShadSheet<TransactionFormResult?>(
     context: context,
     side: ShadSheetSide.bottom,
     builder: (context) =>
@@ -34,10 +47,26 @@ class _TransactionFormSheet extends StatefulWidget {
 
 class _TransactionFormSheetState extends State<_TransactionFormSheet> {
   final _formKey = GlobalKey<ShadFormState>();
+  File? _receiptFile;
 
   /// Hora original da transação: o date picker só escolhe o dia, então
   /// preservamos o horário (que aparece na listagem).
   late final DateTime _baseDate = widget.transaction?.date ?? DateTime.now();
+
+  Future<void> _pickReceipt() async {
+    final picker = ImagePicker();
+
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (image == null) return;
+
+    setState(() {
+      _receiptFile = File(image.path);
+    });
+  }
 
   void _submit() {
     if (!_formKey.currentState!.saveAndValidate()) return;
@@ -46,21 +75,24 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
     final pickedDate = values['date'] as DateTime;
 
     Navigator.of(context).pop(
-      TransactionModel(
-        id: widget.transaction?.id ?? '',
-        userId: widget.userId,
-        description: (values['description'] as String).trim(),
-        category: values['category'] as TransactionCategory,
-        type: values['type'] as TransactionType,
-        amount: parseAmount(values['amount'] as String)!,
-        date: DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          _baseDate.hour,
-          _baseDate.minute,
+      TransactionFormResult(
+        transaction: TransactionModel(
+          id: widget.transaction?.id ?? '',
+          userId: widget.userId,
+          description: (values['description'] as String).trim(),
+          category: values['category'] as TransactionCategory,
+          type: values['type'] as TransactionType,
+          amount: parseAmount(values['amount'] as String)!,
+          date: DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            _baseDate.hour,
+            _baseDate.minute,
+          ),
+          receiptUrl: widget.transaction?.receiptUrl,
         ),
-        receiptUrl: widget.transaction?.receiptUrl,
+        receiptFile: _receiptFile,
       ),
     );
   }
@@ -120,8 +152,9 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                validator: (value) =>
-                    parseAmount(value) == null ? 'Informe um valor válido' : null,
+                validator: (value) => parseAmount(value) == null
+                    ? 'Informe um valor válido'
+                    : null,
               ),
               ShadSelectFormField<TransactionType>(
                 id: 'type',
@@ -160,8 +193,22 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
                 label: const Text('Data'),
                 initialValue: _baseDate,
                 formatDate: formatShortDate,
-                validator: (value) =>
-                    value == null ? 'Escolha a data' : null,
+                validator: (value) => value == null ? 'Escolha a data' : null,
+              ),
+              ShadButton.outline(
+                onPressed: _pickReceipt,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.attach_file),
+                    const SizedBox(width: 8),
+                    Text(
+                      _receiptFile != null
+                          ? 'Recibo selecionado'
+                          : 'Adicionar recibo',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
