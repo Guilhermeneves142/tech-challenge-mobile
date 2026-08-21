@@ -10,6 +10,8 @@ import 'widgets/transaction_filters_bar.dart';
 import 'widgets/transaction_form_sheet.dart';
 import 'widgets/transaction_tile.dart';
 import 'widgets/transactions_summary_cards.dart';
+import 'dart:io';
+import '../data/receipt_img_storage_service.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -74,14 +76,18 @@ class _TransactionsViewState extends State<_TransactionsView> {
   Future<void> _openForm({TransactionModel? transaction}) async {
     final provider = context.read<TransactionsProvider>();
 
-    final draft = await showTransactionFormSheet(
+    final result = await showTransactionFormSheet(
       context,
       userId: widget.userId,
       transaction: transaction,
     );
-    if (draft == null) return;
 
-    final saved = await provider.save(draft);
+    if (result == null) return;
+
+    final saved = await provider.save(
+      result.transaction,
+      receiptFile: result.receiptFile,
+    );
     if (!mounted) return;
 
     if (saved) {
