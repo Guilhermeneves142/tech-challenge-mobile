@@ -236,7 +236,7 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.attach_file),
+                    const Icon(Icons.file_upload_outlined),
                     const SizedBox(width: 8),
                     Text(
                       _receiptFile != null
