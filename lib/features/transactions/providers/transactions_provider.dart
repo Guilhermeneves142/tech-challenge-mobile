@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import '../data/transactions_repository.dart';
 import '../models/transaction.dart';
 import '../models/transaction_filters.dart';
+import 'dart:io';
+import '../data/receipt_img_storage_service.dart';
 
 class TransactionsProvider extends ChangeNotifier {
   TransactionsProvider({
@@ -140,10 +142,30 @@ class TransactionsProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> save(TransactionModel transaction) async {
+  final ReceiptStorageService _receiptStorage = ReceiptStorageService();
+
+  Future<bool> save(
+    TransactionModel transaction, {
+    File? receiptFile,
+  }) async {
     try {
-      await _repository.save(transaction);
+      final savedTransaction = await _repository.save(transaction);
+
+      if (receiptFile != null) {
+        final receiptUrl = await _receiptStorage.upload(
+          userId: userId,
+          transactionId: savedTransaction.id,
+          file: receiptFile,
+        );
+
+        await _repository.updateReceiptUrl(
+          savedTransaction.id,
+          receiptUrl,
+        );
+      }
+
       await refresh();
+
       return true;
     } catch (error) {
       _errorMessage = _friendlyError(error);
