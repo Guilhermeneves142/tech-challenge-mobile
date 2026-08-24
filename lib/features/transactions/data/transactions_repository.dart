@@ -125,16 +125,33 @@ class TransactionsRepository {
     return snapshot.getSum('amount') ?? 0;
   }
 
-  Future<void> save(TransactionModel transaction) {
+  Future<TransactionModel> save(TransactionModel transaction) async {
     final data = transaction.toFirestore();
 
     if (transaction.isNew) {
-      return _collection.add({
+      final doc = await _collection.add({
         ...data,
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      return transaction.copyWith(
+        id: doc.id,
+      );
     }
-    return _collection.doc(transaction.id).update(data);
+
+    await _collection.doc(transaction.id).update(data);
+
+    return transaction;
+  }
+
+  Future<void> updateReceiptUrl(
+    String transactionId,
+    String receiptUrl,
+  ) {
+    return _collection.doc(transactionId).update({
+      'receiptUrl': receiptUrl,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> delete(String transactionId) =>
