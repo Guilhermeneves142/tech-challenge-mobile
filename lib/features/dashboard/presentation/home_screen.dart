@@ -54,7 +54,10 @@ class _DashboardViewState extends State<_DashboardView> {
     );
     if (draft == null) return;
 
-    final saved = await provider.saveTransaction(draft);
+    final saved = await provider.saveTransaction(
+      draft.transaction,
+      receiptFile: draft.receiptFile,
+    );
     if (!mounted) return;
     _toast(
       saved

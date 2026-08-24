@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../transactions/data/receipt_img_storage_service.dart';
 import '../../transactions/models/transaction.dart';
 import '../data/dashboard_repository.dart';
 import '../models/dashboard_data.dart';
@@ -13,6 +16,7 @@ class DashboardProvider extends ChangeNotifier {
 
   final String userId;
   final DashboardRepository _repository;
+  final ReceiptStorageService _receiptStorage = ReceiptStorageService();
 
   DashboardData _data = DashboardData.empty;
   bool _isLoading = true;
@@ -56,9 +60,22 @@ class DashboardProvider extends ChangeNotifier {
   Future<void> refresh() => load();
 
   /// Salva uma nova transação
-  Future<bool> saveTransaction(TransactionModel transaction) async {
+  Future<bool> saveTransaction(
+    TransactionModel transaction, {
+    File? receiptFile,
+  }) async {
     try {
-      await _repository.save(transaction);
+      final savedTransaction = await _repository.save(transaction);
+
+      if (receiptFile != null) {
+        final receiptUrl = await _receiptStorage.upload(
+          userId: userId,
+          transactionId: savedTransaction.id,
+          file: receiptFile,
+        );
+
+        await _repository.updateReceiptUrl(savedTransaction.id, receiptUrl);
+      }
     } catch (error) {
       _errorMessage = _friendlyError(error);
       notifyListeners();
