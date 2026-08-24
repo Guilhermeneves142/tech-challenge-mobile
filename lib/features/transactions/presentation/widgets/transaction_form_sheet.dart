@@ -64,6 +64,46 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
   /// preservamos o horário (que aparece na listagem).
   late final DateTime _baseDate = widget.transaction?.date ?? DateTime.now();
 
+  Widget _buildReceiptPreview() {
+    if (_receiptFile != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.file(
+          _receiptFile!,
+          width: double.infinity,
+          height: 180,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    final receiptUrl = widget.transaction?.receiptUrl;
+
+    if (receiptUrl != null && receiptUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          receiptUrl,
+          width: double.infinity,
+          height: 180,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: double.infinity,
+              height: 180,
+              alignment: Alignment.center,
+              child: const Text(
+                'Não foi possível carregar o recibo',
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   Future<void> _pickReceipt() async {
     final picker = ImagePicker();
 
@@ -84,6 +124,7 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
 
     final values = _formKey.currentState!.value;
     final pickedDate = values['date'] as DateTime;
+    
 
     Navigator.of(context).pop(
       TransactionFormResult(
@@ -112,6 +153,9 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
   Widget build(BuildContext context) {
     final existing = widget.transaction;
     final isEditing = existing != null;
+    final receiptUrl = widget.transaction?.receiptUrl;
+
+    final hasReceipt = _receiptFile != null || (receiptUrl != null && receiptUrl.isNotEmpty);
 
     return ShadDialog(
       radius: BorderRadius.circular(20),
@@ -231,21 +275,28 @@ class _TransactionFormSheetState extends State<_TransactionFormSheet> {
                 );
               },
             ),
-              ShadButton.outline(
-                onPressed: _pickReceipt,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.file_upload_outlined),
-                    const SizedBox(width: 8),
-                    Text(
-                      _receiptFile != null
-                          ? 'Recibo selecionado'
-                          : 'Adicionar recibo',
-                    ),
-                  ],
+              Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ShadButton.outline(
+                  onPressed: _pickReceipt,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.file_upload_outlined),
+                      const SizedBox(width: 8),
+                      Text(
+                        hasReceipt ? 'Trocar recibo' : 'Adicionar recibo',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 12),
+
+                _buildReceiptPreview(),
+              ],
+            ),
             ],
           ),
         ),
