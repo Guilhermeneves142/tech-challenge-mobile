@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/entrance_fade.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/transaction.dart';
 import '../providers/transactions_provider.dart';
@@ -10,6 +11,10 @@ import 'widgets/transaction_filters_bar.dart';
 import 'widgets/transaction_form_sheet.dart';
 import 'widgets/transaction_tile.dart';
 import 'widgets/transactions_summary_cards.dart';
+
+/// Quantos itens do topo da lista ganham animação de entrada — o resto
+/// aparece direto (ver comentário no itemBuilder).
+const _maxAnimatedListItems = 8;
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -97,7 +102,7 @@ class _TransactionsViewState extends State<_TransactionsView> {
     }
   }
 
-  Future<void> _confirmDelete(TransactionModel transaction) async {
+  Future<bool> _confirmDelete(TransactionModel transaction) async {
     final provider = context.read<TransactionsProvider>();
 
     final confirmed = await showShadDialog<bool>(
@@ -141,15 +146,16 @@ class _TransactionsViewState extends State<_TransactionsView> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true) return false;
 
     final deleted = await provider.delete(transaction);
-    if (!mounted) return;
+    if (!mounted) return deleted;
     _toast(
       deleted
           ? 'Transação excluída.'
           : provider.errorMessage ?? 'Não foi possível excluir.',
     );
+    return deleted;
   }
 
   void _toast(String message) {
@@ -219,20 +225,31 @@ class _TransactionsViewState extends State<_TransactionsView> {
   Widget _buildContent(TransactionsProvider provider) {
     if (provider.errorMessage != null && provider.items.isEmpty) {
       return SliverToBoxAdapter(
-        child: _ErrorState(
-          message: provider.errorMessage!,
-          onRetry: provider.refresh,
+        child: _AnimatedState(
+          stateKey: const ValueKey('error'),
+          child: _ErrorState(
+            message: provider.errorMessage!,
+            onRetry: provider.refresh,
+          ),
         ),
       );
     }
 
     if (provider.isLoading && provider.items.isEmpty) {
-      return const SliverToBoxAdapter(child: _LoadingState());
+      return const SliverToBoxAdapter(
+        child: _AnimatedState(
+          stateKey: ValueKey('loading'),
+          child: _LoadingState(),
+        ),
+      );
     }
 
     if (provider.isEmpty) {
       return SliverToBoxAdapter(
-        child: _EmptyState(hasFilters: !provider.filters.isEmpty),
+        child: _AnimatedState(
+          stateKey: const ValueKey('empty'),
+          child: _EmptyState(hasFilters: !provider.filters.isEmpty),
+        ),
       );
     }
 
@@ -241,12 +258,42 @@ class _TransactionsViewState extends State<_TransactionsView> {
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final transaction = provider.items[index];
-        return TransactionTile(
+        final tile = TransactionTile(
+          key: ValueKey(transaction.id),
           transaction: transaction,
           onEdit: () => _openForm(transaction: transaction),
           onDelete: () => _confirmDelete(transaction),
         );
+
+        // Só anima a entrada da primeira leva (a que aparece ao abrir a
+        // tela). Numa SliverList os itens são recriados sempre que saem e
+        // voltam pro viewport, então animar todo mundo faria a animação
+        // repetir a cada scroll — trava em celular fraco.
+        if (index >= _maxAnimatedListItems) return tile;
+
+        return EntranceFade(
+          delay: Duration(milliseconds: 30 * index),
+          child: tile,
+        );
       },
+    );
+  }
+}
+
+/// Cross-fade entre os estados da lista (carregando, erro, vazio).
+class _AnimatedState extends StatelessWidget {
+  const _AnimatedState({required this.stateKey, required this.child});
+
+  final Key stateKey;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: KeyedSubtree(key: stateKey, child: child),
     );
   }
 }
@@ -279,8 +326,12 @@ class _ListFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
 
+    final Key stateKey;
+    final Widget child;
+
     if (provider.isLoadingMore) {
-      return Padding(
+      stateKey = const ValueKey('loading-more');
+      child = Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -298,10 +349,9 @@ class _ListFooter extends StatelessWidget {
           ],
         ),
       );
-    }
-
-    if (provider.errorMessage != null && provider.items.isNotEmpty) {
-      return Padding(
+    } else if (provider.errorMessage != null && provider.items.isNotEmpty) {
+      stateKey = const ValueKey('error');
+      child = Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Text(
           provider.errorMessage!,
@@ -311,19 +361,24 @@ class _ListFooter extends StatelessWidget {
           ),
         ),
       );
+    } else if (provider.items.isEmpty || provider.hasMore) {
+      stateKey = const ValueKey('idle');
+      child = const SizedBox(height: 12);
+    } else {
+      stateKey = const ValueKey('end');
+      child = Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Text(
+          'Você chegou ao fim da lista',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.muted.copyWith(fontSize: 12),
+        ),
+      );
     }
 
-    if (provider.items.isEmpty || provider.hasMore) {
-      return const SizedBox(height: 12);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Text(
-        'Você chegou ao fim da lista',
-        textAlign: TextAlign.center,
-        style: theme.textTheme.muted.copyWith(fontSize: 12),
-      ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: KeyedSubtree(key: stateKey, child: child),
     );
   }
 }

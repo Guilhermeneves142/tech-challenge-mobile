@@ -53,6 +53,16 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "amount", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "amount", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

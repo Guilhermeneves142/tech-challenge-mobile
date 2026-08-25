@@ -6,6 +6,14 @@ class DateRange {
     : start = DateTime(start.year, start.month, start.day),
       end = DateTime(end.year, end.month, end.day, 23, 59, 59, 999);
 
+  /// Do dia 1 ao último dia do mês corrente.
+  factory DateRange.currentMonth() {
+    final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final lastDay = DateTime(now.year, now.month + 1, 0);
+    return DateRange(firstDay, lastDay);
+  }
+
   final DateTime start;
   final DateTime end;
 

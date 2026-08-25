@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'package:finance_app_mobile/core/widgets/entrance_fade.dart';
+
 /// Mensagem "O que você quer fazer?" atalhos do topo do Dashboard
 /// "Transferir" e "Pagar Conta" indisponveis
 class QuickActions extends StatelessWidget {
@@ -23,35 +25,67 @@ class QuickActions extends StatelessWidget {
             Text('O que você quer fazer?', style: theme.textTheme.h3),
           ],
         ),
-        const SizedBox(height: 16),
-        _ActionCard(
-          label: 'Transação',
-          icon: Icons.add_rounded,
-          onTap: onNewTransaction,
-        ),
-        const SizedBox(height: 12),
-        const _ActionCard(label: 'Transferir', icon: Icons.swap_horiz_rounded),
-        const SizedBox(height: 12),
-        const _ActionCard(
-          label: 'Pagar Conta',
-          icon: Icons.qr_code_scanner_rounded,
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            Expanded(
+              child: EntranceFade(
+                child: _ActionItem(
+                  label: 'Transação',
+                  icon: Icons.add_rounded,
+                  onTap: onNewTransaction,
+                ),
+              ),
+            ),
+            Expanded(
+              child: EntranceFade(
+                delay: const Duration(milliseconds: 60),
+                child: const _ActionItem(
+                  label: 'Transferir',
+                  icon: Icons.swap_horiz_rounded,
+                ),
+              ),
+            ),
+            Expanded(
+              child: EntranceFade(
+                delay: const Duration(milliseconds: 120),
+                child: const _ActionItem(
+                  label: 'Pagar Conta',
+                  icon: Icons.qr_code_scanner_rounded,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({required this.label, required this.icon, this.onTap});
+/// Atalho sem card: apenas um ícone circular com leve animação de toque
+/// (escala) e entrada em cascata, para uma linha mais leve e elegante.
+class _ActionItem extends StatefulWidget {
+  const _ActionItem({required this.label, required this.icon, this.onTap});
 
   final String label;
   final IconData icon;
   final VoidCallback? onTap;
 
   @override
+  State<_ActionItem> createState() => _ActionItemState();
+}
+
+class _ActionItemState extends State<_ActionItem> {
+  double _scale = 1;
+
+  void _setPressed(bool pressed) {
+    setState(() => _scale = pressed ? 0.92 : 1);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final enabled = onTap != null;
+    final enabled = widget.onTap != null;
 
     final circleColor = enabled
         ? theme.colorScheme.secondary
@@ -60,21 +94,26 @@ class _ActionCard extends StatelessWidget {
         ? theme.colorScheme.primary
         : theme.colorScheme.mutedForeground;
 
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+    final item = AnimatedScale(
+      scale: _scale,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 48,
-            height: 48,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(color: circleColor, shape: BoxShape.circle),
-            child: Icon(icon, size: 24, color: iconColor),
+            child: Icon(widget.icon, size: 26, color: iconColor),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
-            label,
+            widget.label,
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.small.copyWith(
               fontWeight: FontWeight.w600,
               color: enabled
@@ -89,30 +128,17 @@ class _ActionCard extends StatelessWidget {
     if (!enabled) {
       return Tooltip(
         message: 'Disponível em breve',
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.card,
-            borderRadius: theme.radius,
-            border: Border.all(color: theme.colorScheme.border),
-          ),
-          child: content,
-        ),
+        child: Opacity(opacity: 0.6, child: item),
       );
     }
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.card,
-          borderRadius: theme.radius,
-          border: Border.all(color: theme.colorScheme.border),
-        ),
-        child: content,
-      ),
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      onTap: widget.onTap,
+      child: item,
     );
   }
 }
