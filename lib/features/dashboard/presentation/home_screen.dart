@@ -141,7 +141,7 @@ class _Header extends StatelessWidget {
         Text(
           name == null
               ? 'Veja o seu resumo financeiro'
-              : 'Olá, $name — veja o seu resumo financeiro',
+              : 'Olá, $name. Veja o seu resumo financeiro',
           style: theme.textTheme.muted,
         ),
       ],
