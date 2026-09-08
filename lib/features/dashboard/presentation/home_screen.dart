@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../core/widgets/app_scaffold.dart';
+import '../../../core/widgets/entrance_fade.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../transactions/presentation/widgets/transaction_form_sheet.dart';
 import '../providers/dashboard_provider.dart';
@@ -54,7 +55,10 @@ class _DashboardViewState extends State<_DashboardView> {
     );
     if (draft == null) return;
 
-    final saved = await provider.saveTransaction(draft);
+    final saved = await provider.saveTransaction(
+      draft.transaction,
+      receiptFile: draft.receiptFile,
+    );
     if (!mounted) return;
     _toast(
       saved
@@ -94,30 +98,45 @@ class _DashboardViewState extends State<_DashboardView> {
   }
 
   Widget _buildContent(DashboardProvider provider) {
+    final Key stateKey;
+    final Widget child;
+
     if (provider.errorMessage != null && provider.data.recent.isEmpty) {
-      return _ErrorState(
+      stateKey = const ValueKey('error');
+      child = _ErrorState(
         message: provider.errorMessage!,
         onRetry: provider.refresh,
       );
+    } else if (provider.isLoading && provider.data.recent.isEmpty) {
+      stateKey = const ValueKey('loading');
+      child = const _LoadingState();
+    } else {
+      final data = provider.data;
+      stateKey = const ValueKey('content');
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          EntranceFade(
+            child: QuickActions(onNewTransaction: _openNewTransaction),
+          ),
+          const SizedBox(height: 24),
+          EntranceFade(
+            delay: const Duration(milliseconds: 80),
+            child: AnalyticsSection(
+              data: data,
+              isLoading: provider.isLoading,
+              onSeeAll: () => context.go('/transacoes'),
+            ),
+          ),
+        ],
+      );
     }
 
-    if (provider.isLoading && provider.data.recent.isEmpty) {
-      return const _LoadingState();
-    }
-
-    final data = provider.data;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        QuickActions(onNewTransaction: _openNewTransaction),
-        const SizedBox(height: 24),
-        AnalyticsSection(
-          data: data,
-          isLoading: provider.isLoading,
-          onSeeAll: () => context.go('/transacoes'),
-        ),
-      ],
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: KeyedSubtree(key: stateKey, child: child),
     );
   }
 }

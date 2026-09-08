@@ -6,6 +6,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/home_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/transactions/presentation/transactions_screen.dart';
+import 'transitions/cube_page_transition.dart';
 
 /// Configuração de navegação (go_router).
 ///
@@ -50,7 +51,10 @@ class AppRouter {
         GoRoute(
           path: '/',
           name: 'home',
-          builder: (context, state) => const HomeScreen(),
+          pageBuilder: (context, state) => buildCubeTransitionPage(
+            key: state.pageKey,
+            child: const HomeScreen(),
+          ),
         ),
         GoRoute(
           path: '/login',
@@ -65,7 +69,10 @@ class AppRouter {
         GoRoute(
           path: '/transacoes',
           name: 'transacoes',
-          builder: (context, state) => const TransactionsScreen(),
+          pageBuilder: (context, state) => buildCubeTransitionPage(
+            key: state.pageKey,
+            child: const TransactionsScreen(),
+          ),
         ),
       ],
     );

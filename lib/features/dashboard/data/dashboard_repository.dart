@@ -121,6 +121,9 @@ class DashboardRepository {
   }
 
   /// Salva/atualiza uma transação
-  Future<void> save(TransactionModel transaction) =>
+  Future<TransactionModel> save(TransactionModel transaction) =>
       _transactions.save(transaction);
+
+  Future<void> updateReceiptUrl(String transactionId, String receiptUrl) =>
+      _transactions.updateReceiptUrl(transactionId, receiptUrl);
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../../../core/widgets/entrance_fade.dart';
 import '../../models/dashboard_data.dart';
 import '../../models/dashboard_widget_config.dart';
 import 'dashboard_widget_view.dart';
@@ -29,6 +30,10 @@ class _AnalyticsSectionState extends State<AnalyticsSection> {
   late List<DashboardWidgetConfig> _widgets = List.of(
     widget.initialWidgets ?? defaultDashboardWidgets(),
   );
+
+  // Ids em processo de saída: ficam aqui só durante a animação de remoção.
+  final Set<String> _removingIds = {};
+  static const _removeAnimationDuration = Duration(milliseconds: 200);
 
   Future<void> _addWidget() async {
     final created = await showWidgetEditorSheet(context, data: widget.data);
@@ -102,7 +107,14 @@ class _AnalyticsSectionState extends State<AnalyticsSection> {
     );
 
     if (confirmed != true) return;
-    setState(() => _widgets.removeWhere((w) => w.id == config.id));
+
+    setState(() => _removingIds.add(config.id));
+    await Future.delayed(_removeAnimationDuration);
+    if (!mounted) return;
+    setState(() {
+      _widgets.removeWhere((w) => w.id == config.id);
+      _removingIds.remove(config.id);
+    });
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -155,19 +167,32 @@ class _AnalyticsSectionState extends State<AnalyticsSection> {
                 Material(color: Colors.transparent, child: child),
             itemBuilder: (context, index) {
               final config = _widgets[index];
+              final isRemoving = _removingIds.contains(config.id);
               // Segure o widget para arrastar.
               return Padding(
                 key: ValueKey(config.id),
                 padding: const EdgeInsets.only(bottom: 12),
                 child: ReorderableDelayedDragStartListener(
                   index: index,
-                  child: DashboardWidgetView(
-                    config: config,
-                    data: widget.data,
-                    isLoading: widget.isLoading,
-                    onEdit: () => _editWidget(config),
-                    onDelete: () => _deleteWidget(config),
-                    onSeeAll: widget.onSeeAll,
+                  child: AnimatedOpacity(
+                    opacity: isRemoving ? 0 : 1,
+                    duration: _removeAnimationDuration,
+                    child: AnimatedScale(
+                      scale: isRemoving ? 0.92 : 1,
+                      duration: _removeAnimationDuration,
+                      curve: Curves.easeOut,
+                      child: EntranceFade(
+                        delay: Duration(milliseconds: 40 * index),
+                        child: DashboardWidgetView(
+                          config: config,
+                          data: widget.data,
+                          isLoading: widget.isLoading,
+                          onEdit: () => _editWidget(config),
+                          onDelete: () => _deleteWidget(config),
+                          onSeeAll: widget.onSeeAll,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );

@@ -24,7 +24,11 @@ class TransactionsProvider extends ChangeNotifier {
 
   List<TransactionModel> _items = const [];
   TransactionsSummary _summary = TransactionsSummary.empty;
-  TransactionFilters _filters = const TransactionFilters();
+
+  // O mês atual já vem selecionado — é o recorte mais útil ao abrir a tela.
+  TransactionFilters _filters = TransactionFilters(
+    range: DateRange.currentMonth(),
+  );
   DocumentSnapshot<Map<String, dynamic>>? _cursor;
 
   bool _isLoading = true;
@@ -79,36 +83,40 @@ class TransactionsProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    final pageFuture = _repository.fetchPage(
+      userId: userId,
+      filters: _filters,
+    );
+    final summaryFuture = _repository.fetchSummary(
+      userId: userId,
+      filters: _filters,
+    );
+
     try {
-      final pageFuture = _repository.fetchPage(
-        userId: userId,
-        filters: _filters,
-      );
-      final summaryFuture = _repository.fetchSummary(
-        userId: userId,
-        filters: _filters,
-      );
-
       final page = await pageFuture;
-      final summary = await summaryFuture;
       if (requestId != _requestId) return; // filtro mudou no meio: descarta
-
       _items = page.items;
       _cursor = page.cursor;
       _hasMore = page.hasMore;
-      _summary = summary;
     } catch (error) {
       if (requestId != _requestId) return;
       _items = const [];
       _cursor = null;
       _hasMore = false;
-      _summary = TransactionsSummary.empty;
       _errorMessage = _friendlyError(error);
-    } finally {
-      if (requestId == _requestId) {
-        _isLoading = false;
-        notifyListeners();
-      }
+    }
+
+    try {
+      _summary = await summaryFuture;
+    } catch (error) {
+      if (requestId != _requestId) return;
+      _summary = TransactionsSummary.empty;
+      _errorMessage ??= _friendlyError(error);
+    }
+
+    if (requestId == _requestId) {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
